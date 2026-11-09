@@ -1,0 +1,14 @@
+# Arduino / ESP32 build artifacts
+**/build/
+*.o
+*.elf
+*.map
+*.merged.bin
+
+# scratch
+*.tmp
+*.bak
+
+# OS
+Thumbs.db
+.DS_Store
