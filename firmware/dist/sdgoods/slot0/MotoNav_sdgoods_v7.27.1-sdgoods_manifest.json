@@ -1,0 +1,34 @@
+{
+  "firmware": "7.27.1-sdgoods",
+  "platform": "sdgoods",
+  "board": "SDGOODS ESP32-S3 360x360",
+  "esp32Core": "3.3.10",
+  "flashSize": "32MB",
+  "mode": "DIRECT BOOT (same image at factory 0x10000 + ota_0 0x320000)",
+  "slotOffset": "0x320000",
+  "slotSize": "0x300000",
+  "factoryOffset": "0x10000",
+  "appBytes": 2801120,
+  "slotSafeBytes": 3040870,
+  "sha256": "18cf39ed9524ec6943e91dbd69731d7f45bb152366635006f71ef08895b08870",
+  "deviceTested": true,
+  "deviceTest": {
+    "date": "2026-11-10",
+    "port": "COM7",
+    "flashed": ["0x8000 table", "0xff0000 pt_bak", "0x320000 app", "0x10000 app"],
+    "verified": [
+      "touch ok (CST816)",
+      "[lcd] ST77916 vendor init done, 360x360 QSPI",
+      "[snd] boot chime played (I2S direct -> PA)",
+      "MotoNav ready, firmware v7.27.1-sdgoods",
+      "[touch] selftest: four-corner raw->screen->logical mapping correct",
+      "[touch] music btn centers (133,335)/(233,335)/(333,335) -> hit 0/1/2",
+      "no panic/WDT/brownout/assert in boot log"
+    ],
+    "pending": "real-finger swipe / button press still needs visual confirmation by user",
+    "bootLog": "verify_touch_v7271.txt",
+    "restore": "flash_sdgoods.py --restore --confirm"
+  },
+  "note": "Address-free app image; valid at any app partition offset. Never flash at 0x0 (bootloader). This device has NO official launcher in factory, so the same image is also written to 0x10000 for direct boot; otadata stays all-0xFF.",
+  "changes": "v7.27.1: fixed CST816 raw->display mapping for MADCTL=0x60 (screen_x=raw_y, screen_y=359-raw_x); unified tap slop / drag threshold to 31 logical px (official 24 physical); added jitter filter, 30ms idle fallback poll and 120ms release grace."
+}

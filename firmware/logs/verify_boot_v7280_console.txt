@@ -1,0 +1,10 @@
+esptool hard_reset rc = 0
+--- KEY LINES ---
+[  0.096] touch ok (CST816)
+[  0.229] [lcd] backlight PWM=1
+[  0.424] [lcd] ST77916 vendor init done, 360x360 QSPI
+[  5.021] [snd] boot chime played (I2S direct -> PA, vol=50%)
+[  5.420] [boot] logo hold 1000ms
+[  6.764] MotoNav ready, firmware v7.28.0-sdgoods
+[  6.764] [sdg] single-app factory boot: serial-L return disabled
+total lines = 13

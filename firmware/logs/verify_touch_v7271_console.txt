@@ -1,0 +1,18 @@
+esptool reset rc = 0
+COM7 opened (no reset)
+--- sending serial selftest command t ---
+--- KEY LINES ---
+[lcd] backlight PWM=1
+[lcd] ST77916 vendor init done, 360x360 QSPI
+[snd] boot chime played (I2S direct -> PA)
+MotoNav ready, firmware v7.27.1-sdgoods
+[sdg] single-app factory boot: 3s-key / serial-L return disabled
+[touch] selftest MADCTL=0x60: raw -> screen(360) -> logical(466)
+[touch] raw=(  0,  0) scr=(  0,359) log=(  0,465)
+[touch] raw=(359,  0) scr=(  0,  0) log=(  0,  0)
+[touch] raw=(  0,359) scr=(359,359) log=(465,465)
+[touch] raw=(180,180) scr=(180,179) log=(233,232)
+[touch] music btn center (133,335) -> hit=0 (expect 0)
+[touch] music btn center (233,335) -> hit=1 (expect 1)
+[touch] music btn center (333,335) -> hit=2 (expect 2)
+total lines = 186

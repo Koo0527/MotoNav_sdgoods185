@@ -1,0 +1,36 @@
+{
+  "firmware": "7.27.0-sdgoods",
+  "platform": "sdgoods",
+  "board": "SDGOODS ESP32-S3 360x360",
+  "esp32Core": "3.3.10",
+  "flashSize": "32MB",
+  "mode": "DIRECT BOOT (same image at factory 0x10000 + ota_0 0x320000)",
+  "slotOffset": "0x320000",
+  "slotSize": "0x300000",
+  "factoryOffset": "0x10000",
+  "appBytes": 2800464,
+  "slotSafeBytes": 3040870,
+  "sha256": "84c818d54f25226b92cfc4fc25c5ce5c18651e614aecf960a2d766c43914d616",
+  "deviceTested": true,
+  "deviceTest": {
+    "date": "2026-11-10",
+    "port": "COM7",
+    "chip": "ESP32-S3 QFN56 v0.2, 8MB PSRAM, 32MB Flash, MAC ec:da:3b:67:12:0c",
+    "flashed": ["0x8000 partition-table.bin", "0xff0000 pt_bak.bin", "0x320000 app.bin", "0x10000 app.bin"],
+    "bootLog": "boot_sdgoods_v727_esptool.txt",
+    "verified": [
+      "touch ok (CST816)",
+      "[lcd] backlight PWM=1",
+      "[lcd] ST77916 vendor init done, 360x360 QSPI",
+      "[snd] boot chime played (I2S direct -> PA)",
+      "MotoNav ready, firmware v7.27.0-sdgoods",
+      "[sdg] single-app factory boot: 3s-key / serial-L return disabled",
+      "[sec] auth complete enc=1 auth=1 / [tx] onSubscribe sub=1",
+      "[rx] onWrite n=500 map stream + CLOCK sync + FPSSTAT",
+      "[standby] idle 60s -> Fuji/711 screen (mode0)"
+    ],
+    "noErrors": "no panic/WDT/brownout/assert/failed in boot or steady-state log",
+    "restore": "flash_sdgoods.py --restore --confirm (uses backup/COM7_factory_full_20261110.bin)"
+  },
+  "note": "Address-free app image; valid at any app partition offset. Never flash at 0x0 (bootloader). This device has NO official launcher in factory, so the same image is also written to 0x10000 for direct boot; otadata stays all-0xFF."
+}

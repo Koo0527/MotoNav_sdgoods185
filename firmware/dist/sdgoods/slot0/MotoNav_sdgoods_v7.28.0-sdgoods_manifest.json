@@ -1,0 +1,26 @@
+{
+  "firmware": "7.28.0-sdgoods",
+  "platform": "sdgoods",
+  "board": "SDGOODS ESP32-S3 360x360",
+  "esp32Core": "3.3.10",
+  "flashSize": "32MB",
+  "mode": "DIRECT BOOT (same image at factory 0x10000 + ota_0 0x320000)",
+  "slotOffset": "0x320000",
+  "slotSize": "0x300000",
+  "factoryOffset": "0x10000",
+  "appBytes": 2801664,
+  "slotSafeBytes": 3040870,
+  "sha256": "04acb01f12307a2678225d460139b25ffb386ac4f2cbc8263e7e6b3ce381952e",
+  "deviceTested": true,
+  "note": "Address-free app image; written to factory 0x10000 and ota_0 0x320000 (direct boot, no official launcher present, otadata all 0xFF). v7.28.0 redefines the single GPIO6 power key: hold 3s = on/off, tap = standby screen toggle when idle / map style cycle when navigating or cruising.",
+  "powerKey": {
+    "hold3s": "power off (running) / power on (from deep sleep, 3s hold gate in setup)",
+    "tapStandby": "toggle standby animation <-> screensaver (homeBgMode 1/0)",
+    "tapNavigation": "cycle 12 map styles (themeIdx); covers nav, simulated nav and cruise/roam"
+  },
+  "verification": [
+    "COM7: 4/4 flash segments Hash of data verified",
+    "boot log verify_boot_v7280.txt: MotoNav ready v7.28.0-sdgoods, vol=50%, logo hold 1000ms",
+    "boot log: no panic / WDT / brownout / failed / error"
+  ]
+}

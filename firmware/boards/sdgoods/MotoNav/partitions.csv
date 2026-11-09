@@ -1,0 +1,20 @@
+# SDGOODS 谷仓次元屏（32MB Flash / ESP32-S3-R8）· 保留官方 launcher 的多应用模式
+#
+# 用途：Arduino 编译期分区表。几何必须与烧到设备上的 partition-table.bin 一致。
+# 注意：设备表保留官方 2.0 形态的 16 条 size=0 的 ota_N 占位槽（动态槽），
+#       这里只声明 ota_0 一条实体槽，是为绕开 gen_esp32part.py 的 CSV 重叠检查；
+#       两者对 app 可见的关键分区(nvs / otadata / factory / ota_0 / appdata)逐字节一致。
+#
+# 多应用模式约定：
+#   factory @0x10000 = 官方 launcher（不动）
+#   ota_0   @0x320000 = MotoNav app.bin（3MB，纯应用镜像，不带地址）
+#   otadata 由 launcher 管理：菜单选 MotoNav -> 指向 ota_0 -> 重启
+#            MotoNav 内长按电源键 -> 指回 factory -> 重启回菜单
+#   appdata @0x1000000 高 16MB 永不触碰
+nvs,         data, nvs,       0x9000,     0x6000,
+phy_init,    data, phy,       0xf000,     0x1000,
+launcher,    app,  factory,   0x10000,    0x300000,
+otadata,     data, ota,       0x310000,   0x2000,
+ota_0,       app,  ota_0,     0x320000,   0x300000,
+pt_bak,      data, undefined, 0xff0000,   0x1000,
+appdata,     data, fat,       0x1000000,  0x1000000,

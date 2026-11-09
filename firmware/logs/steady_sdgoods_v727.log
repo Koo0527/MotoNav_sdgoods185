@@ -1,0 +1,12 @@
+port COM7 opened WITHOUT reset, capturing 15.0s ...
+01:23:31 [rx] onWrite n=1
+01:23:33 [standby] idle 60s -> Fuji/711 screen (mode0)
+01:23:33 [rx] onWrite n=1
+01:23:35 [rx] onWrite n=1
+01:23:37 [rx] onWrite n=1
+01:23:39 [rx] onWrite n=1
+01:23:41 [rx] onWrite n=1
+01:23:43 [rx] onWrite n=22
+01:23:43 CLOCK sync time=01:23 date=2026/11/10
+01:23:45 [rx] onWrite n=1
+capture done.

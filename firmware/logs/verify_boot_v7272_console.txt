@@ -1,0 +1,11 @@
+esptool hard_reset rc = 0
+COM7 opened (no further reset)
+--- KEY LINES (t = seconds after esptool reset) ---
+[  0.100] touch ok (CST816)
+[  0.232] [lcd] backlight PWM=1
+[  0.427] [lcd] ST77916 vendor init done, 360x360 QSPI
+[  5.025] [snd] boot chime played (I2S direct -> PA, vol=50%)
+[  5.427] [boot] logo hold 1000ms
+[  6.770] MotoNav ready, firmware v7.27.2-sdgoods
+[  6.770] [sdg] single-app factory boot: 3s-key / serial-L return disabled
+total lines = 182

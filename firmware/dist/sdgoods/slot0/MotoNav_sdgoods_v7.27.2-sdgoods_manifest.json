@@ -1,0 +1,25 @@
+{
+  "firmware": "7.27.2-sdgoods",
+  "platform": "sdgoods",
+  "board": "SDGOODS ESP32-S3 360x360",
+  "esp32Core": "3.3.10",
+  "flashSize": "32MB",
+  "mode": "DIRECT BOOT (same image at factory 0x10000 + ota_0 0x320000)",
+  "slotOffset": "0x320000",
+  "slotSize": "0x300000",
+  "factoryOffset": "0x10000",
+  "appBytes": 2801152,
+  "slotSafeBytes": 3040870,
+  "sha256": "304a548bc2f92bc8597169c489101f49228161470773adfa43f09086263ac28d",
+  "deviceTested": true,
+  "bootChimeVolumePct": 50,
+  "logoHoldMs": 1000,
+  "verification": [
+    "COM7 COM port VID_303A:1001, 4/4 flash segments Hash of data verified",
+    "boot log: [snd] boot chime played (I2S direct -> PA, vol=50%)",
+    "boot log: [boot] logo hold 1000ms (t=5.427s) -> MotoNav ready (t=6.770s)",
+    "boot log: touch ok (CST816), ST77916 vendor init done, MotoNav ready v7.27.2-sdgoods",
+    "no panic / WDT / brownout / assert / failed / error in 14s capture"
+  ],
+  "note": "Address-free app image; valid at any app partition offset. Never flash at 0x0 (bootloader). This device has NO official launcher in factory, so the same image is also written to 0x10000 for direct boot; otadata stays all-0xFF. v7.27.2 lowers boot chime amplitude to 50% (-6dB) via BOOT_CHIME_VOLUME_PCT in MotoNav.ino and shortens the final LOGO hold from 3000ms to 1000ms; BootSound.h is unchanged."
+}

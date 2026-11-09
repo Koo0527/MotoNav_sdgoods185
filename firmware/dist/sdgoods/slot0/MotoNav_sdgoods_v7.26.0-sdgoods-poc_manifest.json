@@ -1,0 +1,15 @@
+{
+  "firmware": "7.26.0-sdgoods-poc",
+  "platform": "sdgoods",
+  "board": "SDGOODS ESP32-S3 360x360",
+  "esp32Core": "3.3.10",
+  "flashSize": "32MB",
+  "mode": "MULTI (launcher app slot ota_0)",
+  "slotOffset": "0x320000",
+  "slotSize": "0x300000",
+  "appBytes": 2791360,
+  "slotSafeBytes": 3040870,
+  "sha256": "2769ab757a20e1a9f252896d25d4256209dcc26c87c929c7e23cf2155ec4276d",
+  "deviceTested": false,
+  "note": "Address-free app image. Never flash at 0x0 / 0x10000."
+}

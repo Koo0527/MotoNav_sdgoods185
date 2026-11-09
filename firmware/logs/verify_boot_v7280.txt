@@ -1,0 +1,13 @@
+[  0.096] touch ok (CST816)
+[  0.229] [lcd] backlight PWM=1
+[  0.424] [lcd] ST77916 vendor init done, 360x360 QSPI
+[  5.021] [snd] boot chime played (I2S direct -> PA, vol=50%)
+[  5.420] [boot] logo hold 1000ms
+[  6.764] IPC stacks bytes=4096/4096 free-min=3160/3152
+[  6.764] MotoNav ready, firmware v7.28.0-sdgoods
+[  6.764] [sdg] single-app factory boot: serial-L return disabled
+[  6.789] MEDIA HID ready=0 auth=0 sub=0 suspended=0 report=1 release=1
+[  6.789] MEDIA AMS controls=0
+[  8.430] [sec] auth complete enc=1 auth=1
+[  8.430] [tx] onSubscribe sub=1 handle=1
+[  8.520] [ble] onConnect 准备发起安全请求(配对码) handle=65535

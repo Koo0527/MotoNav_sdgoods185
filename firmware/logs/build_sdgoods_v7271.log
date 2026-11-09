@@ -1,0 +1,9 @@
+In file included from C:\Users\William Koo\WorkBuddy\2026-10-24-23-23-18\MotoNav\firmware\boards\sdgoods\MotoNav\src\core\DeviceContext.h:8,
+                 from C:\Users\William Koo\WorkBuddy\2026-10-24-23-23-18\MotoNav\firmware\boards\sdgoods\MotoNav\MotoNav.ino:9:
+C:\Users\William Koo\WorkBuddy\2026-10-24-23-23-18\MotoNav\firmware\libraries\SensorLib\src/TouchDrvCSTXXX.hpp:5:110: note: '#pragma message: WARNING: TouchDrvCSTXXX.hpp is deprecated. Include TouchDrvCST.hpp or TouchDrv.hpp instead.'
+    5 | #pragma message("WARNING: TouchDrvCSTXXX.hpp is deprecated. Include TouchDrvCST.hpp or TouchDrv.hpp instead.")
+      |                                                                                                              ^
+Sketch uses 2800866 bytes (21%) of program storage space. Maximum is 13107200 bytes.
+Global variables use 97948 bytes (29%) of dynamic memory, leaving 229732 bytes for local variables. Maximum is 327680 bytes.
+app.bin: 2801120 B (92.1% of slot limit)
+output : C:\Users\William Koo\WorkBuddy\2026-10-24-23-23-18\MotoNav\firmware\dist\sdgoods\slot0\MotoNav_sdgoods_v7.27.1-sdgoods_app.bin
