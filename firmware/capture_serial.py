@@ -13,6 +13,7 @@ import argparse
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 import serial
 
@@ -24,8 +25,8 @@ ap.add_argument('--out', default='serial_capture.txt')
 ap.add_argument('--reset', action='store_true', help='pulse RTS once after opening')
 ap.add_argument('--reset-esptool', action='store_true',
                 help='let esptool hard-reset the chip before opening the port')
-ap.add_argument('--esptool', default='C:/Users/William Koo/AppData/Local/Arduino15/'
-                'packages/esp32/tools/esptool_py/5.3.0/esptool.exe')
+ap.add_argument('--esptool', default=str(Path.home() / 'AppData/Local/Arduino15/'
+                'packages/esp32/tools/esptool_py/5.3.0/esptool.exe'))
 args = ap.parse_args()
 
 if args.reset_esptool:

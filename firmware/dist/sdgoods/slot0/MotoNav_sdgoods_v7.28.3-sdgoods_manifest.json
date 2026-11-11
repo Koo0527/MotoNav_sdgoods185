@@ -1,0 +1,16 @@
+{
+  "firmware": "7.28.3-sdgoods",
+  "platform": "sdgoods",
+  "board": "SDGOODS ESP32-S3 360x360",
+  "esp32Core": "3.3.10",
+  "flashSize": "32MB",
+  "mode": "DIRECT BOOT (same image at factory 0x10000 + ota_0 0x320000)",
+  "slotOffset": "0x320000",
+  "slotSize": "0x300000",
+  "factoryOffset": "0x10000",
+  "appBytes": 2802624,
+  "slotSafeBytes": 3040870,
+  "sha256": "9998d78e30e503f6df25f850da1960bcd26b749b40cbca45f5ad48ddb5f3c117",
+  "deviceTested": false,
+  "note": "Address-free app image; valid at any app partition offset. Never flash at 0x0 (bootloader). This device has NO official launcher in factory, so the same image is also written to 0x10000 for direct boot; otadata stays all-0xFF."
+}

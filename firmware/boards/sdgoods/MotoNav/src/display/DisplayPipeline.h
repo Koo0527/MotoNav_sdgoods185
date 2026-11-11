@@ -8,6 +8,9 @@ int fbCur = 0;                    // 画布当前用的是哪一块
 SemaphoreHandle_t flushReq = nullptr, flushDone = nullptr;
 uint16_t *volatile flushSrc = nullptr;
 volatile uint32_t flushMsAcc = 0, flushCnt = 0;
+// v7.28.4 跟手拖动期间置 true：推屏改用最近邻取样，省掉双线性插值的 3/4 次 PSRAM 读。
+// 只在 slidePrepare ~ slideCommit 之间生效，静止画面仍旧走双线性，画质不变。
+volatile bool pushNearest = false;
 
 // ---- v2.6 快速刷屏：自己往屏幕数据线上排队发送，两块缓冲轮流用（一块在传、一块在准备）----
 #define FAST_PIX 4096                     // 每段像素数（8KB）
@@ -88,6 +91,7 @@ void __attribute__((optimize("O3"))) fastPush(const uint16_t *fb) {
   digitalWrite(LCD_CS, LOW);
   static spi_transaction_ext_t tr[2];
   const uint32_t total = (uint32_t)PANEL_WIDTH * PANEL_HEIGHT;
+  const bool nearest = pushNearest;                   // 拖动中：走最近邻，取样成本降到 1/4
   uint32_t sent = 0;
   int bi = 0, inflight = 0;
   bool first = true;
@@ -102,7 +106,9 @@ void __attribute__((optimize("O3"))) fastPush(const uint16_t *fb) {
     uint16_t *out = (uint16_t *)fastBuf[bi];
     int py = sent / PANEL_WIDTH, px = sent - py * PANEL_WIDTH;
     for (uint32_t i = 0; i < count; i++) {
-      uint16_t v = portScale.pixel(fb, px, py, screenRot, rotFree, rotCos, rotSin);
+      uint16_t v = nearest
+        ? portScale.pixelNearest(fb, px, py, screenRot, rotFree, rotCos, rotSin)
+        : portScale.pixel(fb, px, py, screenRot, rotFree, rotCos, rotSin);
       out[i] = (uint16_t)((v >> 8) | (v << 8));      // 屏幕要高字节在前
       if (++px == PANEL_WIDTH) { px = 0; py++; }
     }
@@ -139,17 +145,21 @@ void flushLogicalFrame(const uint16_t *fb) {
   if (fastDev) { fastPush(fb); return; }
   static uint16_t *physical = nullptr;
   if (!physical) physical = (uint16_t *)ps_malloc(PANEL_WIDTH * PANEL_HEIGHT * 2);
+  const bool nearest = pushNearest;
   if (physical) {
     for (int y = 0; y < PANEL_HEIGHT; y++)
       for (int x = 0; x < PANEL_WIDTH; x++)
-        physical[y * PANEL_WIDTH + x] =
-          portScale.pixel(fb, x, y, screenRot, rotFree, rotCos, rotSin);
+        physical[y * PANEL_WIDTH + x] = nearest
+          ? portScale.pixelNearest(fb, x, y, screenRot, rotFree, rotCos, rotSin)
+          : portScale.pixel(fb, x, y, screenRot, rotFree, rotCos, rotSin);
     panel->draw16bitRGBBitmap(0, 0, physical, PANEL_WIDTH, PANEL_HEIGHT);
   } else {
     uint16_t row[PANEL_WIDTH];
     for (int y = 0; y < PANEL_HEIGHT; y++) {
       for (int x = 0; x < PANEL_WIDTH; x++)
-        row[x] = portScale.pixel(fb, x, y, screenRot, rotFree, rotCos, rotSin);
+        row[x] = nearest
+          ? portScale.pixelNearest(fb, x, y, screenRot, rotFree, rotCos, rotSin)
+          : portScale.pixel(fb, x, y, screenRot, rotFree, rotCos, rotSin);
       panel->draw16bitRGBBitmap(0, y, row, PANEL_WIDTH, 1);
     }
   }
@@ -180,6 +190,24 @@ void flushAsync() {
   xSemaphoreGive(flushReq);
   fbCur ^= 1;
   gfx->setFramebuffer(fbBuf[fbCur]);
+}
+
+// v7.28.4 拖动专用：上一帧还在推就先不发（返回 false），绝不让触摸任务等推屏。
+//
+// 为什么可以推迟：合成只写 fbBuf[fbCur]，正在推的一直是 fbBuf[fbCur^1]（flushAsync
+// 在投递的同时就把 fbCur 翻过去了），所以晚一拍发不会覆盖正在传的缓冲；
+// slideCompose 每帧都是从 slideOld/slideNew 整帧重算，也不存在增量丢失。
+//
+// 收益：手指位置不再被 QSPI 传输时间卡住——等一帧推完（十几毫秒）再采下一个点，
+// 正是「划动跟手但发涩」的直接原因。返回值给调用方记账，下一拍接着补发。
+bool flushAsyncDrop() {
+  if (!fbBuf[1]) { gfx->flush(); return true; }
+  if (xSemaphoreTake(flushDone, 0) != pdTRUE) return false;   // 上一帧还在传：这一帧不要了
+  flushSrc = fbBuf[fbCur];
+  xSemaphoreGive(flushReq);
+  fbCur ^= 1;
+  gfx->setFramebuffer(fbBuf[fbCur]);
+  return true;
 }
 
 // 同步刷屏（普通画面用，等推完再返回）

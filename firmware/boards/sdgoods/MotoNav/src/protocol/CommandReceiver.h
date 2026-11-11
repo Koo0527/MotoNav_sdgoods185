@@ -355,6 +355,7 @@ void handleText(const String &m) {
   if (m.startsWith("#m,")) { mapOn = m.substring(3).toInt() != 0; navDirty = true; return; }
   if (m.startsWith("#b,")) {
     int b = constrain(m.substring(3).toInt(), 5, 255);
+    userBrightness = b; brightnessDimmed = false;       // v7.28.6 App 显式设亮度 = 解除待机压暗
     if (flushDone) {                                    // v2.2 刷屏任务在用总线时先等它推完
       xSemaphoreTake(flushDone, portMAX_DELAY);
       boardBrightness(b);
@@ -400,6 +401,7 @@ void handleMessage(const uint8_t *d, int n) {
   lastRxMs = millis();
   if (staleShown) { staleShown = false; navDirty = true; }   // 收到任何消息，清掉数据中断提示
   if (d[0] == 'B') { handleBitmap(d, n); return; }
+  if (d[0] == 'C') { handleColorArt(d, n); return; }   // v7.28.6 彩色封面 RGB565
   if (d[0] == 'M') { handleBulk(d, n); return; }     // v2.0 地图块 / 路线
   char buf[512];                                      // v4.8 64 → 512：电子眼列表长了会被截断
   int len = n < 511 ? n : 511;

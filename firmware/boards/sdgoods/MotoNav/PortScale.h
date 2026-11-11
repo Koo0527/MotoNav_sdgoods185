@@ -20,6 +20,25 @@ public:
   static uint32_t spread(uint16_t c) {
     return ((uint32_t)c | ((uint32_t)c << 16)) & 0x07E0F81Fu;
   }
+  // 最近邻取样：把旋转做完后直接取最近的一个源像素，跳过双线性插值的 4 次读。
+  // 只在「跟手拖动 / 换页动画」这十几帧里用（见 DisplayPipeline 的 pushNearest）：
+  // 画面本来就在高速平移，肉眼分辨不出插值差异，但推屏开销从 4 次 PSRAM 读降到 1 次。
+  uint16_t pixelNearest(const uint16_t *source, int x, int y, int rotation,
+                        bool freeRotation, int32_t cosine, int32_t sine) const {
+    int32_t fx = axis[x], fy = axis[y];
+    constexpr int32_t center = (LOGICAL - 1) * 32768;
+    if (freeRotation) {
+      int32_t dx = fx - center, dy = fy - center;
+      fx = (int32_t)(((int64_t)dx * cosine + (int64_t)dy * sine) >> 16) + center;
+      fy = (int32_t)((-(int64_t)dx * sine + (int64_t)dy * cosine) >> 16) + center;
+    } else if (rotation == 1) { int32_t a = fx; fx = fy; fy = 2 * center - a; }
+    else if (rotation == 2)   { fx = 2 * center - fx; fy = 2 * center - fy; }
+    else if (rotation == 3)   { int32_t a = fx; fx = 2 * center - fy; fy = a; }
+    int sx = (fx + 32768) >> 16, sy = (fy + 32768) >> 16;      // +0.5 四舍五入
+    if ((unsigned)sx >= LOGICAL || (unsigned)sy >= LOGICAL) return 0;
+    return source[sy * LOGICAL + sx];
+  }
+
   uint16_t pixel(const uint16_t *source, int x, int y, int rotation,
                  bool freeRotation, int32_t cosine, int32_t sine) const {
     int32_t fx = axis[x], fy = axis[y];

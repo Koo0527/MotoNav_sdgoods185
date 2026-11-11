@@ -37,8 +37,21 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 BOARD = HERE / 'boards' / 'sdgoods'
 BACKUP = HERE / 'backup'
-ESPTOOL = Path('C:/Users/William Koo/AppData/Local/Arduino15/packages/esp32/'
-               'tools/esptool_py/5.3.0/esptool.exe')
+def _find_esptool():
+    # 优先本机 Arduino15 的 esptool，其次旧机器的硬编码路径
+    for p in (
+        Path.home() / 'AppData/Local/Arduino15/packages/esp32/tools/esptool_py/5.3.0/esptool.exe',
+        Path('C:/Users/LENOVO/AppData/Local/Arduino15/packages/esp32/tools/esptool_py/5.3.0/esptool.exe'),
+        Path('C:/Users/William Koo/AppData/Local/Arduino15/packages/esp32/'
+             'tools/esptool_py/5.3.0/esptool.exe'),
+    ):
+        if p.exists():
+            return p
+    return Path('C:/Users/William Koo/AppData/Local/Arduino15/packages/esp32/'
+                'tools/esptool_py/5.3.0/esptool.exe')
+
+
+ESPTOOL = _find_esptool()
 SLOT_OFFSET = 0x320000
 SLOT_SIZE = 0x300000
 FACTORY_OFFSET = 0x10000

@@ -38,6 +38,12 @@ void touchInit() {
 // 两者不等时会出现「既被判成滑动、又被判成点按」的矛盾区间，点按会凭空消失、滑动抢走点击。
 #define TOUCH_TAP_SLOP 31
 
+// v7.28.4 滤波分档：单帧位移超过这个值就认定「在划动」，跳过一阶低通直接跟手。
+// 22 逻辑 px ≈ 17 物理 px —— 高于 CST816 实测抖动（8~10 物理 px），又远低于正常划动的
+// 单帧位移（8ms 一采、手指 300px/s 时约 3~4 物理 px……快速甩动时能到 20+）。
+// 原来不分档，一直按 (旧+新)/2 走，快速划动时位置始终落后手指半帧到一帧，手感发黏。
+#define TOUCH_FAST_FOLLOW 22
+
 // 官方 BSP components/sdgoods_board/src/sdgoods_input.c :: map_raw_to_lvgl()
 //     x = LCD_WIDTH-1-raw_x ; y = raw_y ; out_x = y ; out_y = x
 // MADCTL=0x60（MV=1 行列互换 + MX=1 X 镜像）让 CST816 原始坐标与屏幕显示坐标差一次
@@ -82,12 +88,17 @@ void touchPoll() {
   int16_t x[5] = {0}, y[5] = {0};
   uint8_t n = touch.getPoint(x, y, 1);
   if (n > 0) {
+    lastUserAt = now;                     // v7.28.6 任何触摸都算操作：退出待机压暗
     const int16_t rawX = x[0], rawY = y[0];
     panelPointToLogical(x[0], y[0]);
-    // CST816 端点抖动实测 8~10 物理 px：一阶低通压掉一半，划动更跟手，
-    // 8ms 采样下只多约一帧延迟（首帧不滤波，保证起手坐标准确）。
+    // CST816 端点抖动实测 8~10 物理 px：慢速移动/点按时一阶低通压掉一半；
+    // 划动（单帧位移 ≥ TOUCH_FAST_FOLLOW）则不再滤波，保证「手指到哪画面到哪」。
     if (!filtInit) { filtX = x[0]; filtY = y[0]; filtInit = true; }
-    else { filtX = (int16_t)((filtX + x[0]) >> 1); filtY = (int16_t)((filtY + y[0]) >> 1); }
+    else if (abs((int)x[0] - (int)filtX) + abs((int)y[0] - (int)filtY) >= TOUCH_FAST_FOLLOW) {
+      filtX = x[0]; filtY = y[0];
+    } else {
+      filtX = (int16_t)((filtX + x[0]) >> 1); filtY = (int16_t)((filtY + y[0]) >> 1);
+    }
     x[0] = filtX; y[0] = filtY;
     if (!touchDown) {
       touchDown = true;

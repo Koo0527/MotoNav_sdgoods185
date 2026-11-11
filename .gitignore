@@ -1,13 +1,21 @@
 # Arduino / ESP32 build artifacts
 **/build/
+.build/
 *.o
 *.elf
 *.map
 *.merged.bin
 
+# third-party build deps (fetched from upstream, not vendored)
+firmware/libraries/
+
+# reproducible publish output (regenerate with firmware/pack_publish.py)
+firmware/dist/publish/
+
 # scratch
 *.tmp
 *.bak
+serial_capture.txt
 
 # OS
 Thumbs.db

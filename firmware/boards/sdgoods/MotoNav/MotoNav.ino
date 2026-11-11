@@ -59,7 +59,7 @@ static i2s_chan_handle_t chimeTx = nullptr;
 // v7.27.2 开机音量：100 = 原始幅度，50 = 幅度减半（-6dB，即音量降低 50%）。
 // 在送 I2S 前对 PCM 做整数缩放，不改动 resources/BootSound.h（无需重新生成资源）。
 // 想再调音量只改这里：0 = 静音，75 = 降低 25%，依此类推。
-#define BOOT_CHIME_VOLUME_PCT 50
+#define BOOT_CHIME_VOLUME_PCT 20   // v7.28.1 开机音效再减 30（50 -> 20）
 
 static void bootChime() {
   const uint32_t RATE = BOOT_SOUND_RATE;
@@ -190,20 +190,23 @@ void setup() {
 #endif
   Wire.begin(IIC_SDA, IIC_SCL);
   touchInit();                                         // v5.2 触摸屏
+  // v7.28.4 触摸 I2C 提到 400kHz（官方 BSP board_pins.h 的 BOARD_I2C_FREQ_HZ 同为 400k）。
+  // 默认 100kHz 下一次取点要 1~2ms，等于给每个触摸样本白加了一截延迟；
+  // 本板 I2C 上只有 CST816（电池走 GPIO8 ADC，没有 AXP2101），提速无副作用。
+  if (touchOK) Wire.setClock(400000);
   batInit();                                           // v6.8 电源芯片（电量）
 
-  // v2.3 读取保存的屏幕数据线速度（默认 40MHz，和官方示例一样）
+  // v7.28.1 屏幕数据线速度：默认直接 80MHz（忽略旧存储值，始终以 80MHz 启动）
   {
     Preferences pr;
     pr.begin("motonav", true);
-    qspiMHz = pr.getInt("qspi", 40);
+    qspiMHz = 80;
     screenRot = pr.getInt("rot", 0) & 3;                            // v6.2 圆屏方向
     setScreenDeg(pr.getInt("rotd", screenRot * 90), false);         // v6.4 任意角度
     bootBrand = BootAnimation::valid(pr.getInt("bootbrand", 0));
     hidMusicMode = pr.getBool("mediahid", false);
     fastFlushOn = pr.getBool("fastf", true);
     pr.end();
-    if (qspiMHz != 40 && qspiMHz != 60 && qspiMHz != 80) qspiMHz = 40;
   }
   boardBrightnessInit();                               // 谷仓：GPIO13 LEDC 背光
   if (!gfx->begin(qspiMHz * 1000000)) {
@@ -216,10 +219,13 @@ void setup() {
   buildRingLut();                                                   // v1.8.3 抗锯齿圆环查找表
   mapInit();                                                        // v2.0 小地图缓冲
   for (int i = 0; i < IMG_SLOTS; i++) {
-    imgs[i].show = (uint8_t *)ps_malloc(IMG_MAX);
-    imgs[i].recv = (uint8_t *)ps_malloc(IMG_MAX);
+    const uint32_t cap = (i == 13) ? IMG_ART_MAX : IMG_MAX;         // v7.28.6 封面槽更大
+    imgs[i].show = (uint8_t *)ps_malloc(cap);
+    imgs[i].recv = (uint8_t *)ps_malloc(cap);
     imgs[i].showW = 0; imgs[i].showH = 0; imgs[i].recvId = -1;
   }
+  artColor.show = (uint16_t *)ps_malloc(255 * 255 * 2);             // v7.28.6 彩色封面 255×255 RGB565
+  artColor.recv = (uint16_t *)ps_malloc(255 * 255 * 2);
 
   // Begin with black instead of briefly displaying the waiting page before the intro.
   gfx->fillScreen(0);
@@ -314,6 +320,7 @@ void setup() {
       (unsigned long)ipc.freeMinimum[0],(unsigned long)ipc.freeMinimum[1]);
   idlePowerOffReset(&idlePowerOffTimer, millis());
   Serial.println(String("MotoNav ready, firmware ") + FW_VERSION);
+  lastUserAt = millis();                               // v7.28.6 开机即计时：待机 3 分钟无操作也压暗
 }
 
 #include "src/power/Shutdown.h"
@@ -325,6 +332,7 @@ void setup() {
 //   2) 待机界面单击：切换「待机动画」与「待机屏保」(homeBgMode 1 / 0)
 //   3) 导航 / 模拟导航 / 漫游(巡航) 单击：循环切换 12 套地图风格 themeIdx
 static void sdgoodsPowerKeyTap() {
+  lastUserAt = millis();                    // v7.28.6 按键也算操作：退出待机压暗
   const bool standby = onWaitScreen && page == 0 && !inNav && !sliding &&
                        !callOn && !fxOn && !pairOn;
   const bool navigating = inNav || cruiseOn;   // 模拟导航走 inNav；漫游 = cruiseOn
@@ -394,6 +402,18 @@ void loop() {
     }
   }
 #endif
+  // v7.28.6 待机省电：待机界面 3 分钟无触摸/按键 → 背光降到 10%；
+  // 任意触摸、按键、来电、进入导航/音乐/天气页都立即恢复。
+  {
+    const bool standbyIdle = onWaitScreen && page == 0 && !inNav && !callOn && !pairOn && !sliding && !fxOn;
+    const bool wantDim = standbyIdle && lastUserAt && millis() - lastUserAt >= 180000UL;
+    if (wantDim != brightnessDimmed) {
+      brightnessDimmed = wantDim;
+      if (flushDone) { xSemaphoreTake(flushDone, portMAX_DELAY); boardBrightness(wantDim ? 20 : userBrightness); xSemaphoreGive(flushDone); }
+      else boardBrightness(wantDim ? 20 : userBrightness);
+      Serial.printf("[pwr] backlight %s\n", wantDim ? "dim to 10% (standby 3min)" : "restore");
+    }
+  }
   homeClock.tick(millis());
   hidMediaTick();                                      // press/release without blocking navigation
   static uint32_t lyricConnectionEpoch = 0;
@@ -401,7 +421,10 @@ void loop() {
     lyricConnectionEpoch = mediaConnectionEpoch; musicLyrics = false; lyricImageGeneration = 0;
     imgs[12].showW = 0; imgs[12].showH = 0; imgs[12].recvId = -1; musicDirty = true;
   }
-  appleMedia.tick(bleConnected && bleAuthed && hidMusicMode, bleConnHandle, mediaConnectionEpoch, millis());
+  // v7.28.5 iOS 音乐推送通道常开：只要 BLE 已配对，AMS（Apple Media Service）
+  // 就保持订阅——iPhone 上打开音乐 App 开始播放，歌名/歌手/进度即推到屏幕。
+  // 之前被 hidMusicMode（媒体按键模式）锁着，不开按键模式就收不到。
+  appleMedia.tick(bleConnected && bleAuthed, bleConnHandle, mediaConnectionEpoch, millis());
   static int lastControlMask = -1;
   int controlMask = appleMedia.controlMask();
   if (lastControlMask != controlMask) { lastControlMask = controlMask; pendingMediaStatus = String("AMC,") + controlMask; musicDirty = true; Serial.printf("MEDIA AMS controls=%d\n", controlMask); }
@@ -413,11 +436,14 @@ void loop() {
       lyricImageGeneration = 0;
       lyricGeneration = appleMedia.generation; lyricTitleRevision = appleMedia.values[0].revision; lyricArtistRevision = appleMedia.values[1].revision;
       imgs[12].showW = 0; imgs[12].showH = 0; imgs[12].recvId = -1;
+      artColor.w = artColor.h = 0; artColor.id = -1;   // v7.28.6 换歌：清彩色封面，等 App 推新的
     }
-    if (hidMusicMode) { musicHave = appleMedia.available && appleMedia.values[0].text.length(); musicPlaying = appleMedia.playback.known && appleMedia.playback.state == 1; }
+    // v7.28.5 AMS 有数据时以它为准（iOS 音乐 App 推送），不再要求 HID 模式；
+    // Android（AMS 不可用）仍走 #Z 通道，互不干扰。
+    if (appleMedia.available) { musicHave = appleMedia.available && appleMedia.values[0].text.length(); musicPlaying = appleMedia.playback.known && appleMedia.playback.state == 1; }
   }
   static unsigned long mediaDrawAt = 0;
-  if (hidMusicMode && appleMedia.available && millis() - mediaDrawAt >= 1000) { mediaDrawAt = millis(); musicDirty = true; }
+  if (appleMedia.available && millis() - mediaDrawAt >= 1000) { mediaDrawAt = millis(); musicDirty = true; }
   saveRotIfDue();                                      // v6.4
   // v6.5 连上 60 秒还没通过验证（不是自己的手机）：断开，让自己的手机能连
 #if defined(CONFIG_NIMBLE_ENABLED)
@@ -647,5 +673,7 @@ void loop() {
     }
   }
 #endif
-  delay(mapNow ? 1 : 10);
+  // v7.28.4 拖动/换页动画期间不睡：原来固定 delay(10)，等于给每一帧拖动画面硬加 10ms
+  //（30fps 直接掉到 20fps 左右），是左右划动发涩的主因之一。
+  delay((sliding || dragging) ? 1 : (mapNow ? 1 : 10));
 }

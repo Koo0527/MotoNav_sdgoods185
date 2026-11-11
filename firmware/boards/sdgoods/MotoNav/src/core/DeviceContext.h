@@ -55,7 +55,7 @@ public:
 SwapCanvas *gfx = new SwapCanvas(LCD_WIDTH, LCD_HEIGHT, panel);
 bool needFlush = false;
 bool frameIsMap = false;          // v2.2 这一帧是小地图（整帧重画，可以异步刷屏）
-int qspiMHz = 40;                 // v2.3 屏幕数据线速度
+int qspiMHz = 80;                 // v7.28.1 屏幕数据线速度：默认直接 80MHz
 bool fastFlushOn = true;          // v2.6 快速刷屏
 
 
@@ -153,8 +153,9 @@ float mapCamLockH[MCAM_MAX];  // v4.0 放图标时的地图朝向：之后固定
 uint8_t laneBg[8], laneFr[8]; // 每条车道的背景方向码、推荐方向码（0xF = 不推荐）
 
 // ===== 文字图片（手机渲染好的 4 位灰度图）=====
-#define IMG_SLOTS 13           // 0 = 路名，1 = 底部信息，2 = 来电人名字，3/4 = 天气地名和风湿度，5/6 = 音乐歌名和歌手
-#define IMG_MAX   8192        // 每张图最多字节数
+#define IMG_SLOTS 14           // 0 = 路名，1 = 底部信息，2 = 来电人名字，3/4 = 天气地名和风湿度，5/6 = 音乐歌名和歌手，12 = 歌词，13 = 专辑封面灰度图（App 推送，可选）
+#define IMG_MAX   8192        // 每张文字图最多字节数（128×128 4bpp）
+#define IMG_ART_MAX 33280     // v7.28.6 槽位13 封面上限：255×255 4bpp
 struct TextImg {
   uint8_t *show;              // 正在显示的图
   uint16_t showW; uint8_t showH;
@@ -162,6 +163,18 @@ struct TextImg {
   int recvId; uint16_t recvW; uint8_t recvH; uint8_t recvParts; uint32_t recvMask;
 };
 TextImg imgs[IMG_SLOTS];
+// ===== v7.28.6 彩色封面（'C' 通道 RGB565）：非空时优先于灰度槽 13 =====
+struct ColorArt {
+  uint16_t *show = nullptr, *recv = nullptr;    // PSRAM，各 255×255×2 B
+  uint16_t w = 0, h = 0;                        // 正在显示的尺寸
+  int id = -1; uint16_t recvW = 0, recvH = 0; uint8_t recvParts = 0; uint8_t recvMask[32];
+};
+ColorArt artColor;
+// ===== v7.28.6 待机省电 =====
+int userBrightness = 200;                       // '#b,' 设置的亮度（默认 200）
+bool brightnessDimmed = false;                  // 当前处于待机压暗状态
+volatile unsigned long lastUserAt = 0;          // 最近一次触摸/按键（0 = 尚无）
+// ===== v7.28.5 音乐页（方块封面）=====
 AppleMediaClient appleMedia;
 volatile uint32_t mediaConnectionEpoch = 0;
 uint32_t lyricImageGeneration = 0; uint16_t lyricImageTitleRevision = 0, lyricImageArtistRevision = 0;

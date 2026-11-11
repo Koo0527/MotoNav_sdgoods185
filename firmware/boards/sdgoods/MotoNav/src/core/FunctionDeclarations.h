@@ -72,6 +72,7 @@ static uint8_t imgNib(const TextImg &im, int bpr, int x, int y);
 static uint16_t greyColor(uint8_t a, uint8_t tint);
 void drawTextImg(int slot, int y0, uint8_t tint);
 void handleBitmap(const uint8_t *d, int n);
+void handleColorArt(const uint8_t *d, int n);   // v7.28.6 彩色封面 RGB565
 void animateCat();
 void drawPageDots();
 void drawWaiting(int st);
