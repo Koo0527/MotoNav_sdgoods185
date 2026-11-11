@@ -10,7 +10,9 @@
 firmware/libraries/
 
 # reproducible publish output (regenerate with firmware/pack_publish.py)
-firmware/dist/publish/
+# 只保留当前发布版本的平台包，历史版本不进仓库
+firmware/dist/publish/*
+!firmware/dist/publish/v7.28.6/
 
 # scratch
 *.tmp

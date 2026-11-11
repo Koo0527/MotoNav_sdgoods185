@@ -1,0 +1,57 @@
+{
+  "name": "MotoNav",
+  "firmware": "7.28.6",
+  "board": "SDGOODS ESP32-S3 360x360（谷仓次元屏）",
+  "chip": "esp32s3",
+  "platform": "sdgoods",
+  "appId": "MotoNav",
+  "descVersion": "v7.28.6",
+  "descPatched": true,
+  "descBefore": {
+    "project": "arduino-lib-builder",
+    "version": "43a8f6d"
+  },
+  "images": {
+    "single_app": {
+      "file": "MotoNav_sdgoods_v7.28.6_app.bin",
+      "bytes": 2806448,
+      "sha256": "cc7deb754df9192c57e5e812a2b0c2e907d228617b65683ca02b1cecfca42d27",
+      "flashAddress": "0x10000（出厂区/单应用）或任意 ota_N 槽",
+      "addressFree": true,
+      "uploadToPlatform": true,
+      "flash": "esptool --chip esp32s3 -p <PORT> write-flash 0x10000 MotoNav_sdgoods_v7.28.6_app.bin"
+    },
+    "full_0x0": {
+      "file": "MotoNav_sdgoods_v7.28.6_full_0x0.bin",
+      "bytes": 3219456,
+      "sha256": "a2a965e1e1c8fcd3396abb477d992992160074729acbd54a74c70d627534163c",
+      "flashAddress": "0x0",
+      "addressFree": false,
+      "uploadToPlatform": false,
+      "segments": [
+        {
+          "part": "bootloader",
+          "address": "0x0",
+          "bytes": 19984
+        },
+        {
+          "part": "partition-table",
+          "address": "0x8000",
+          "bytes": 3072
+        },
+        {
+          "part": "otadata(blank)",
+          "address": "0x310000",
+          "bytes": 8192
+        },
+        {
+          "part": "app",
+          "address": "0x10000",
+          "bytes": 2806448
+        }
+      ],
+      "flash": "esptool --chip esp32s3 -p <PORT> write-flash 0x0 MotoNav_sdgoods_v7.28.6_full_0x0.bin"
+    }
+  },
+  "note": "整包带地址、从 0x0 起写，会覆盖 bootloader/分区表/出厂区，仅用于整机烧录或官方通道上传；开发者账号上传平台请用 single_app。"
+}
