@@ -112,6 +112,10 @@ int page = 0;                               // 0 = 导航 / 首页，1 = 天气�
 int wxDetail = 0;                           // 天气列：0 = 天气，1 = 上方降雨，2 = 下方预警
 unsigned long pageAt = 0;
 
+// v7.28.7 第三套待机：OMEGA Speedmaster Snoopy 50周年表盘（homeBgMode==2）
+// 依赖 page/onWaitScreen/sliding/homeBgMode 声明，故放在此处包含
+#include "../graphics/OmegaWatchface.h"
+
 // 页面顺序对应滑动位置：音乐在左，主页居中，天气在右；导航主页不显示。
 void drawPageDots() {
   if (page == 0 && inNav) return;
@@ -128,6 +132,7 @@ void drawPageDots() {
 // 文字层：两种待机画面共用同一套位置（时钟/日期/ready/版本/电池不变）
 void drawHomeClock(bool force=false) {
   if(!onWaitScreen||sliding||page!=0||inNav)return;
+  if(homeBgMode==2)return;                  // v7.28.7 表盘模式：时间由三根指针表达，不画数字时钟
   static int64_t drawnMinute=-2;
   const uint32_t now=millis();
   const int64_t minute=homeClock.minuteKey(now);
@@ -166,6 +171,13 @@ void drawWaiting(int st) {
   if (page == 1) { onWaitScreen = false; wxDirty = true; return; }   // v5.3 正在看天气：先不画首页，滑回来时再画
   onWaitScreen = true; waitSt = st;
 
+  if (homeBgMode == 2) {
+    // v7.28.7 OMEGA Snoopy 表盘：整幅底图 + 实时三根中央针；纯表盘，不叠加文字层
+    if (!omegaEnsure()) { homeBgMode = 0; drawWaiting(st); return; }   // PSRAM 失败回退屏保
+    omegaHandsTick(true);
+    needFlush = true;
+    return;
+  }
   if (homeBgMode == 1) {
     // 原版黑底 + 动画（点赞小人 + cc110 摩托）；文字位置与模式 0 一致
     gfx->fillScreen(C_BLACK);

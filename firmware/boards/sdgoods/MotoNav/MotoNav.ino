@@ -337,7 +337,7 @@ static void sdgoodsPowerKeyTap() {
                        !callOn && !fxOn && !pairOn;
   const bool navigating = inNav || cruiseOn;   // 模拟导航走 inNav；漫游 = cruiseOn
   if (standby) {
-    homeBgMode = homeBgMode ? 0 : 1;
+    homeBgMode = (homeBgMode + 1) % 3;        // v7.28.7 三套待机循环：动画1 -> 表盘2 -> 屏保0
     standbyIdleSince = millis();              // 手动切换也算一次操作，重置 1 分钟计时
     Serial.printf("[key] tap -> standby screen %d\n", homeBgMode);
     drawWaiting(waitSt);
@@ -582,6 +582,7 @@ void loop() {
   static bool lightShown=false;
   static uint32_t lightDrawAt=0;
   drawStandbyAnim();
+  omegaHandsTick();               // v7.28.7 表盘模式 2：1Hz 走针（秒变化才整幅重绘）
   drawHomeClock();
   if(showLight) {
     if(!lightShown || needFlush || lightNow-lightDrawAt>=200) {
@@ -635,7 +636,7 @@ void loop() {
       if (!bootLongFired && dur >= 50 && dur < 2000) {
         // 待机状态下短按：切换两套待机画面（CC110 背景 / 原版骑手动画）
         if (onWaitScreen && page == 0 && !inNav && !sliding) {
-          homeBgMode = homeBgMode ? 0 : 1;
+          homeBgMode = (homeBgMode + 1) % 3;   // v7.28.7 三套待机循环：动画1 -> 表盘2 -> 屏保0
           standbyIdleSince = millis();   // 手动切换也算一次操作，重置 1 分钟计时
           Serial.printf("BOOT short press -> standby screen %d\n", homeBgMode);
           drawWaiting(waitSt);

@@ -13,6 +13,8 @@ firmware/libraries/
 # 只保留当前发布版本的平台包，历史版本不进仓库
 firmware/dist/publish/*
 !firmware/dist/publish/v7.28.6/
+!firmware/dist/publish/v7.28.7-sdgoods/
+!firmware/dist/publish/v7.28.8-sdgoods/
 
 # scratch
 *.tmp

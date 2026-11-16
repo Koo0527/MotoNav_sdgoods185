@@ -18,6 +18,10 @@ public:
   int64_t minuteKey(uint32_t now) {
     tick(now);return valid?localMillis/60000:-1;
   }
+  // v7.28.7 表盘走针用：本地 epoch 秒（未同步返回 -1）
+  int64_t localSeconds(uint32_t now) {
+    tick(now);return valid?localMillis/1000:-1;
+  }
   bool receive(const char *packet,uint32_t now) {
     if(!packet||strncmp(packet,"#TIME,",6)!=0)return false;
     const char *p=packet+6;
